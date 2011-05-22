@@ -1,0 +1,15 @@
+v0.4:
+- G-code processor now handles multiple G commands per line (currently up to 5), TODO: The G-codes on one line are currently executed in the same order they're found in the line.
+- Drill cycles G81, G82, G83, G85, G89 and G73 added
+- Added Set Zero XY and Set Zero Z commands to GUI
+- Experimental EaseIn/EaseOut code for cartesian_dda
+- M6 command: Tool change (manual)
+- G54..G59 Working Coordinate System (WCS)
+- EEPROM preferences for WCS and Tools
+
+
+TODO:
+- Pause machine in case of an error (e.g. unsuccessful G54 command)
+- Reenable/Reinsert Extruder code
+- G40/G41/G42
+- Automatic delayed homing after machine reset
