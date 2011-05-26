@@ -73,7 +73,7 @@ void MachineModel::startup()
 
 void MachineModel::shutdown()
 {
-  // ldcUi.shutdown();
+  lcdUi.shutdown();
 
   // No more stepping or other interrupts
   cli();

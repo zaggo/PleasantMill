@@ -32,7 +32,7 @@
 #define ACCELERATION_ON 1
 #define ACCELERATION_OFF 0
 
-#define FW_VERSION "v0.4"
+#define FW_VERSION "0.4.1"
 
 // Config
 

@@ -1,3 +1,8 @@
+v0.4.1:
+- Fixed a problem with EEPROM_WriteString
+- M112 (Shutdown) now displays a message on the LCD
+- Cartesian parameters are now fetched later during g-code processing and only if necessary. This fixes some issues with multiple g-code commands on one line.
+
 v0.4:
 - G-code processor now handles multiple G commands per line (currently up to 5), TODO: The G-codes on one line are currently executed in the same order they're found in the line.
 - Drill cycles G81, G82, G83, G85, G89 and G73 added

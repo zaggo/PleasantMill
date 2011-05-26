@@ -1,4 +1,4 @@
-"Pleasant Mill"
+"Pleasant Mill" Firmware
 Copyright (c) 2011 Eberhard Rensch, Pleasant Software, Offenburg
 All rights reserved.
 http://pleasantsoftware.com/developer/3d/pleasant-mill/
@@ -19,5 +19,5 @@ You should have received a copy of the GNU General Public License along with
 this program; if not, see <http://www.gnu.org/licenses>.
 
 *** Important! ***
-The firmware code needs the Bounce library:
+This code needs the Bounce library:
 http://www.arduino.cc/playground/Code/Bounce

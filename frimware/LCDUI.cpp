@@ -418,6 +418,7 @@ void LcdUi::handleEmergencyStop()
 	if(selectedMenuItem==kEmergencyItemAbort) // Reset
 	{
 		// Delete everything in the ring buffer
+		sharedMachineModel.receiving=false;
 		sharedMachineModel.cancelAndClearQueue();
 		savedUIState = kUIStateMain;
 	}

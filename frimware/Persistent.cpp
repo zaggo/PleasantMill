@@ -90,6 +90,7 @@ void EEPROM_WriteString(int address, const char* value)
 {
 	for(int i=0; i<strlen(value); i++)
 	  EEPROM.write(address++, *value++);
+	EEPROM.write(address, 0); 
 }
 
 char* EEPROM_ReadString(int address, char* buffer)

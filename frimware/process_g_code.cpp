@@ -263,6 +263,44 @@ void parse_string(char instruction[ ], int size)
 	}
 }
 
+void fetchCartesianParameters()
+{
+	fp = sharedMachineModel.localPosition;
+	if (sharedMachineModel.getAbsMode())
+	{
+		if (gc.seen[GCODE_X])
+			fp.x = gc.X;
+		if (gc.seen[GCODE_Y])
+			fp.y = gc.Y;
+		if (gc.seen[GCODE_Z])
+			fp.z = gc.Z;
+		if (gc.seen[GCODE_E]) // Legacy
+			fp.a = gc.A;
+		if (gc.seen[GCODE_A])
+			fp.a = gc.A;
+		if (gc.seen[GCODE_B])
+			fp.a = gc.B;
+	}
+	else
+	{
+		if (gc.seen[GCODE_X])
+			fp.x += gc.X;
+		if (gc.seen[GCODE_Y])
+			fp.y += gc.Y;
+		if (gc.seen[GCODE_Z])
+			fp.z += gc.Z;
+		if (gc.seen[GCODE_E])
+			fp.a += gc.A;
+		if (gc.seen[GCODE_A])
+			fp.a += gc.A;
+		if (gc.seen[GCODE_B])
+			fp.b += gc.B;
+	}
+
+	// Get feedrate if supplied - feedrates are always absolute???
+	if ( gc.seen[GCODE_F] )
+		fp.f = MIN(gc.F, FAST_XY_FEEDRATE);
+}
 
 //Read the string and execute instructions
 void process_string(char instruction[], int size)
@@ -348,43 +386,7 @@ void process_string(char instruction[], int size)
 	
 	//did we get a gcode?
 	if (gc.seen[GCODE_G])
-	{
-		fp = sharedMachineModel.localPosition;
-		if (sharedMachineModel.getAbsMode())
-		{
-			if (gc.seen[GCODE_X])
-				fp.x = gc.X;
-			if (gc.seen[GCODE_Y])
-				fp.y = gc.Y;
-			if (gc.seen[GCODE_Z])
-				fp.z = gc.Z;
-			if (gc.seen[GCODE_E]) // Legacy
-				fp.a = gc.A;
-			if (gc.seen[GCODE_A])
-				fp.a = gc.A;
-			if (gc.seen[GCODE_B])
-				fp.a = gc.B;
-		}
-		else
-		{
-			if (gc.seen[GCODE_X])
-				fp.x += gc.X;
-			if (gc.seen[GCODE_Y])
-				fp.y += gc.Y;
-			if (gc.seen[GCODE_Z])
-				fp.z += gc.Z;
-			if (gc.seen[GCODE_E])
-				fp.a += gc.A;
-			if (gc.seen[GCODE_A])
-				fp.a += gc.A;
-			if (gc.seen[GCODE_B])
-				fp.b += gc.B;
-		}
-
-		// Get feedrate if supplied - feedrates are always absolute???
-		if ( gc.seen[GCODE_F] )
-			fp.f = MIN(gc.F, FAST_XY_FEEDRATE);
-		   
+	{		   
 		// Handle all GCodes in this line
 		for(int gIndex=0; gIndex<gc.GIndex; gIndex++)
 		{
@@ -401,15 +403,18 @@ void process_string(char instruction[], int size)
 				////////////////////////
 				
 				case 0:		//Rapid move
+							fetchCartesianParameters();
 							rapidMove(fp);
 							break;
 							
 				case 1:		// Controlled move;
+							fetchCartesianParameters();
 							sharedMachineModel.qMove(fp);
 							break;
 															  
 				case 2:		// G2, Clockwise arc
 				case 3: 	// G3, Counterclockwise arc
+							fetchCartesianParameters();
 							if(gc.seen[GCODE_R])
 							{
 							  //drawRadius(tempX, tempY, rVal, (gc.G[gIndex]==2));
@@ -431,6 +436,7 @@ void process_string(char instruction[], int size)
 				
 							
 				case 28:	//go home.  If we send coordinates (regardless of their value) only zero those axes
+							fetchCartesianParameters();
 							axisSelected = false;
 							if(gc.seen[GCODE_Z])
 							{
@@ -501,6 +507,7 @@ void process_string(char instruction[], int size)
 				case 85:	// Drill Cycle, slow retract
 				case 89:	// Drill Cycle with dwell and slow reredract
 							sharedMachineModel.waitFor_qEmpty(); // Non-buffered G command. Wait till the buffer q is empty first
+							fetchCartesianParameters();
 							doDrillCycle(gc.G[gIndex], fp);
 							break;
 																					
@@ -516,6 +523,7 @@ void process_string(char instruction[], int size)
 
 				case 92:	//Set position as fp
 							sharedMachineModel.waitFor_qEmpty(); // Non-buffered G command. Wait till the buffer q is empty first
+							fetchCartesianParameters();
 							sharedMachineModel.setLocalZero(fp);
 							break;
 
