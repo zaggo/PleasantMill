@@ -162,7 +162,9 @@ inline void hostcom::reset()
 inline void hostcom::start()
 {
   putInit();
-  put("start");
+  put("PleasantMill[");
+  put(FW_VERSION);
+  put("]");
   putEnd();  
 }
 

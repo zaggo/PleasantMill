@@ -82,6 +82,8 @@ ISR(TIMER1_COMPA_vect)
 
 void setup()
 {
+  talkToHost.start();
+  
   nonest = false;
   disableTimerInterrupt();
   setupTimerInterrupt();
@@ -89,8 +91,6 @@ void setup()
   pinMode(DEBUG_PIN, OUTPUT);
 
   setupGcodeProcessor();
-  
-  talkToHost.start();
   
   checkEEPROM();
 
@@ -104,6 +104,5 @@ void loop()
 {
   nonest = false;
   sharedMachineModel.manage(true);
-  if(!sharedMachineModel.emergencyStop && sharedMachineModel.receiving)
-  	get_and_do_command();
+  get_and_do_command();
 }

@@ -34,6 +34,7 @@
 #include "vectors.h"
 #include "cartesian_dda.h"
 #include "hostcom.h"
+#include "Persistent.h"
 
 #define MIN(x, y) (x<y)?x:y
 
@@ -115,11 +116,17 @@ struct GcodeParser
     long LastLineNrRecieved;
 };
 
+#define STRING_BUFFER_SIZE 32
+
 //our command string
 char cmdbuffer[COMMAND_SIZE];
 char c = '?';
 byte serial_count = 0;
+byte strArgCount = 0;
 boolean comment = false;
+boolean stringArg = false;
+char strArgBuffer[STRING_BUFFER_SIZE];
+char strBuffer[STRING_BUFFER_SIZE];
 
 FloatPoint fp;
 
@@ -151,13 +158,16 @@ inline void init_process_string()
 {
   serial_count = 0;
   comment = false;
+  stringArg = false;
+  strArgCount = 0;
+  strArgBuffer[0]=0x0;
+  
   gc.GIndex=0;
 }
 
 // Get a command and process it
-
 void get_and_do_command()
-{         
+{    
 	c = ' ';
 	while(talkToHost.gotData() && c != '\n')
 	{
@@ -175,14 +185,25 @@ void get_and_do_command()
 			// Start of comment - ignore any bytes received from now on
 			if (c == ';' || c=='(')
 				comment = true;
-				
-			// If we're not in comment mode, add it to our array.
-			if (!comment)
-				cmdbuffer[serial_count++] = toupper(c);
-			else if(c == ')')
-				comment = false;
+			
+			if(!comment)
+			{
+				if(c == '\"')
+				{
+					stringArg=!stringArg;
+					strArgBuffer[strArgCount]=0x0;
+				}
+				else if(stringArg)
+				{
+					if(strArgCount<STRING_BUFFER_SIZE)
+						strArgBuffer[strArgCount++] = c;
+				}
+				else // If we're not in comment mode (and string mode), add it to our array.
+					cmdbuffer[serial_count++] = toupper(c);
+			}
 		  }
 		}
+		
 		// Buffer overflow?
 		if(serial_count >= COMMAND_SIZE)
 			init_process_string();
@@ -202,6 +223,7 @@ void get_and_do_command()
 			//process our command!
 			process_string(cmdbuffer, serial_count);
 		}
+		
 		//clear command.
 		init_process_string();
 		
@@ -302,25 +324,10 @@ void fetchCartesianParameters()
 		fp.f = MIN(gc.F, FAST_XY_FEEDRATE);
 }
 
-//Read the string and execute instructions
-void process_string(char instruction[], int size)
+void execute_commands(char instruction[])
 {
-	//the character / means delete block... used for comments and stuff.
-	if (instruction[0] == '/')	
-		return;
-
 	bool axisSelected;
         
-	fp.x = 0.0;
-	fp.y = 0.0;
-	fp.z = 0.0;
-	fp.a = 0.0;
-	fp.b = 0.0;
-	fp.f = 0.0;
-
-	//get all our parameters!
-	parse_string(instruction, size);
-  
 	// Do we have lineNr and checksums in this gcode?
 	if((bool)(gc.seen[GCODE_CHECKSUM]) | (bool)(gc.seen[GCODE_N]))
 	{
@@ -612,7 +619,7 @@ void process_string(char instruction[], int size)
 			case 111:
 				SendDebug = gc.S;
 				break;
-			case 112:	// STOP!
+			case 112:	// STOP! (priority commnand)
 				sharedMachineModel.shutdown();
 				break;
 
@@ -663,6 +670,33 @@ void process_string(char instruction[], int size)
 			case 142: //TODO: set holding pressure
 				break;                                
 
+
+			// Pleasant Mill priority commands
+			// These commands are executed, even if the machine isn't in "armed for data" mode
+			
+			case 900:	// Machine-Identification
+				sprintf(talkToHost.string(), "Pleasant Mill[%s]", FW_VERSION);
+				break;
+				
+			case 901:	// Get Device Name
+				sprintf(talkToHost.string(), EEPROM_ReadString(EEPROM_ADR_DEVICENAME, strBuffer));
+				break;
+				
+			case 902:	// Set Device Name: The string argument is found in the commen
+				if(strlen(strArgBuffer)>0)
+				{
+					strBuffer[16]=0x0;
+					EEPROM_WriteString(EEPROM_ADR_DEVICENAME, strArgBuffer);
+				}
+				else
+				{
+					if(SendDebug & DEBUG_ERRORS)
+						sprintf(talkToHost.string(), "Error: M902 not possible, bad device name argument: %s", strArgBuffer);
+					talkToHost.setResend(gc.LastLineNrRecieved+1);
+				}
+				break;
+				
+				
 			default:
 				if(SendDebug & DEBUG_ERRORS)
 					sprintf(talkToHost.string(), "Dud M code: M%d", gc.M);
@@ -675,6 +709,53 @@ void process_string(char instruction[], int size)
 	{
 		sharedMachineModel.waitFor_qEmpty(); 
 //		newExtruder(gc.T);
+	}
+}
+
+bool isPriorityCommand()
+{
+	bool priority = false;
+	if(gc.seen[GCODE_M])
+	{
+		switch(gc.M)
+		{
+			case 112:
+			case 900:
+			case 901:
+			case 902:
+				priority = true;
+				break;
+		}
+	}
+	return priority;
+}
+
+//Read the string and execute instructions
+void process_string(char instruction[], int size)
+{
+	//the character / means delete block... used for comments and stuff.
+	if (instruction[0] != '/')	
+	{
+		fp.x = 0.0;
+		fp.y = 0.0;
+		fp.z = 0.0;
+		fp.a = 0.0;
+		fp.b = 0.0;
+		fp.f = 0.0;
+	
+		//get all our parameters!
+		parse_string(instruction, size);
+	  
+	  
+		bool handleStandardCommands = (!sharedMachineModel.emergencyStop && sharedMachineModel.receiving);
+    	if(handleStandardCommands || isPriorityCommand())
+			execute_commands(instruction);
+		else
+		{
+			if(SendDebug & DEBUG_ERRORS)
+                sprintf(talkToHost.string(), "Error: Machine is not armed (%s)", instruction);
+            talkToHost.setResend(gc.LastLineNrRecieved+1);
+        }
 	}
 }
 

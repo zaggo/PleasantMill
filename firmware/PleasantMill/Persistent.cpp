@@ -44,6 +44,8 @@ void checkEEPROM()
      for(int i=0; i<TOOL_COUNT; i++)
      	EEPROM_WriteString(EEPROM_ADR_TOOL_BASE+i*EEPROM_SIZE_TOOL_RECORD, nullString);
           
+	 EEPROM_WriteString(EEPROM_ADR_DEVICENAME, "PleasantMill");
+       
      EEPROM.write(EEPROM_ADR_IDENT, EEPROM_IDENTIFIER0);
      EEPROM.write(EEPROM_ADR_IDENT+1, EEPROM_IDENTIFIER1);
      EEPROM.write(EEPROM_ADR_IDENT+2, EEPROM_IDENTIFIER2);
@@ -88,17 +90,18 @@ FloatPoint EEPROM_ReadFloatPoint(int address)
 
 void EEPROM_WriteString(int address, const char* value)
 {
-	for(int i=0; i<strlen(value); i++)
+	while(*value!=0x0)
 	  EEPROM.write(address++, *value++);
 	EEPROM.write(address, 0); 
 }
 
 char* EEPROM_ReadString(int address, char* buffer)
 {
+	char *ptr = buffer;
 	char c;
 	do {
 		c = EEPROM.read(address++);
-		*buffer++ = c;
+		*ptr++ = c;
 	} while(c!=0x0);
 	return buffer;
 }
