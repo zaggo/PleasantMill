@@ -24,7 +24,7 @@
 
 #ifndef LCD_UI_H
 #define LCD_UI_H
-#include "WProgram.h"
+#include "Arduino.h"
 #include <Bounce.h>
 #include "pins.h"
 #include "vectors.h"

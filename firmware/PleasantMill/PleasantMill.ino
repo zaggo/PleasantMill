@@ -23,7 +23,7 @@
  * This code needs the Bounce library:
  * http://www.arduino.cc/playground/Code/Bounce
  */
-#include "WProgram.h"
+#include "Arduino.h"
 #include <Wire.h>
 #include <Bounce.h>
 #include <EEPROM.h>
@@ -82,6 +82,10 @@ ISR(TIMER1_COMPA_vect)
 
 void setup()
 {
+#if 1
+  Serial1.begin(115200);
+  Serial1.println("Hello Debugger");
+#endif  
   talkToHost.start();
   
   nonest = false;

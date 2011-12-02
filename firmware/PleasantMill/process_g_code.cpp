@@ -27,7 +27,7 @@
  * 
  */
 #include <string.h>
-#include "WProgram.h"
+#include "Arduino.h"
 #include "MachineModel.h"
 #include "pins.h"
 //#include "extruder.h"
@@ -219,7 +219,7 @@ void get_and_do_command()
 					
 			if(SendDebug & DEBUG_ECHO)
 				sprintf(talkToHost.string(), "Echo: %s", cmdbuffer);
-					   
+							
 			//process our command!
 			process_string(cmdbuffer, serial_count);
 		}
@@ -749,7 +749,9 @@ void process_string(char instruction[], int size)
 	  
 		bool handleStandardCommands = (!sharedMachineModel.emergencyStop && sharedMachineModel.receiving);
     	if(handleStandardCommands || isPriorityCommand())
+    	{
 			execute_commands(instruction);
+		}
 		else
 		{
 			if(SendDebug & DEBUG_ERRORS)
@@ -872,13 +874,45 @@ void drawArc(float centerX, float centerY, float endpointX, float endpointY, boo
   // and if not add 2PI so that it is (this also takes
   // care of the special case of angleA == angleB,
   // ie we want a complete circle)
-  if (angleB <= angleA)
+  if (angleB<=angleA)
     angleB += 2. * M_PI;
   angle = angleB - angleA;
 		
   // calculate a couple useful things.
   radius = sqrt(aX * aX + aY * aY);
   length = radius * angle;
+
+#if 0
+  Serial1.println("drawArc");
+  Serial1.print("lPX:");
+  Serial1.print(sharedMachineModel.localPosition.x);
+  Serial1.print(" lPY:");
+  Serial1.print(sharedMachineModel.localPosition.y);
+  Serial1.print(" cx:");
+  Serial1.print(centerX);
+  Serial1.print(" cx:");
+  Serial1.print(centerY);
+  Serial1.print(" ex:");
+  Serial1.print(endpointX);
+  Serial1.print(" ey:");
+  Serial1.print(endpointY);
+  Serial1.print(" ax:");
+  Serial1.print(aX);
+  Serial1.print(" ay:");
+  Serial1.print(aY);
+  Serial1.print(" bx:");
+  Serial1.print(bX);
+  Serial1.print(" by:");
+  Serial1.print(bY);
+  Serial1.print(" angleA:");
+  Serial1.print(angleA/M_PI*180.);
+  Serial1.print(" angleB:");
+  Serial1.print(angleB/M_PI*180.);
+  Serial1.print(" angle:");
+  Serial1.print(angle/M_PI*180.);
+  Serial1.print(" radius:");
+  Serial1.println(radius);
+#endif
 
   // for doing the actual move.
   int steps;
@@ -889,10 +923,6 @@ void drawArc(float centerX, float centerY, float endpointX, float endpointY, boo
   // or the length of the curve divided by the curve section constant
   steps = (int)ceil(max(angle * 2.4, length));
 
-  // this is the real draw action.
-  float newPointX = 0.;
-  float newPointY = 0.;
-  
   FloatPoint circlePoint = sharedMachineModel.localPosition;
   
   for (s = 1; s <= steps; s++) {
@@ -904,11 +934,15 @@ void drawArc(float centerX, float centerY, float endpointX, float endpointY, boo
 
     // calculate our waypoint.
     circlePoint.x = centerX + radius * cos(angleA + angle * ((float) step / steps));
-    circlePoint.y = centerY + radius	* sin(angleA + angle * ((float) step / steps));
+    circlePoint.y = centerY + radius * sin(angleA + angle * ((float) step / steps));
 
     // start the move
 	sharedMachineModel.qMove(circlePoint);
   }
+  
+  // Avoid problems with rounding errors above...
+  sharedMachineModel.localPosition.x = endpointX;
+  sharedMachineModel.localPosition.y = endpointY;
 }
 
 void doDrillCycle(int gCode, FloatPoint &fp)

@@ -21,7 +21,7 @@
  * 
  */
 
-#include "WProgram.h"
+#include "Arduino.h"
 
 #ifndef VECTORS_H
 #define VECTORS_H

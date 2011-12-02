@@ -21,7 +21,7 @@
  * 
  */
  
-#include "WProgram.h"
+#include "Arduino.h"
 #include "interruptHandling.h"
 
 //******************************************************************************************

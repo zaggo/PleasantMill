@@ -22,7 +22,7 @@
 #ifndef MACHINEMODEL_H
 #define MACHINEMODEL_H
 
-#include "WProgram.h"
+#include "Arduino.h"
 #include "configuration.h"
 #include "vectors.h"
 

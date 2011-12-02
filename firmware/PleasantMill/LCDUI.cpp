@@ -831,8 +831,8 @@ void LcdUi::initializeLCDHardware()
     Wire.begin();
     // Switch on LCD
     Wire.beginTransmission(kI2C_LCD_SLAVE_ADR);
-    Wire.send(kI2C_DisplayON_OFF);
-    Wire.send(kI2C_DisplayON); // On, no Cursor, no Blink
+    Wire.write(kI2C_DisplayON_OFF);
+    Wire.write(kI2C_DisplayON); // On, no Cursor, no Blink
     Wire.endTransmission();
 }
 
@@ -840,7 +840,7 @@ void LcdUi::clearDisplay()
 {
     // Clear the Display
     Wire.beginTransmission(kI2C_LCD_SLAVE_ADR);
-    Wire.send(kI2C_ClrDisplay);
+    Wire.write(kI2C_ClrDisplay);
     Wire.endTransmission();
 }
 
@@ -849,28 +849,28 @@ void LcdUi::writeAtLine(int line, const char* text)
 {
   int len = strlen(text);
   Wire.beginTransmission(kI2C_LCD_SLAVE_ADR);
-  Wire.send(kI2C_SetCursor);
+  Wire.write(kI2C_SetCursor);
   switch(line)
   {
-    case 1: Wire.send(kLCD_DDA_Line0); break;
-    case 2: Wire.send(kLCD_DDA_Line1); break;
-    case 3: Wire.send(kLCD_DDA_Line2); break;
-    case 4: Wire.send(kLCD_DDA_Line3); break;
+    case 1: Wire.write(kLCD_DDA_Line0); break;
+    case 2: Wire.write(kLCD_DDA_Line1); break;
+    case 3: Wire.write(kLCD_DDA_Line2); break;
+    case 4: Wire.write(kLCD_DDA_Line3); break;
   }
   Wire.endTransmission();
   
   Wire.beginTransmission(kI2C_LCD_SLAVE_ADR);
-  Wire.send(kI2C_WriteString);
-  Wire.send((char*)text);
+  Wire.write(kI2C_WriteString);
+  Wire.write((char*)text);
   Wire.endTransmission();
   
   if(len<20)
   {
     Wire.beginTransmission(kI2C_LCD_SLAVE_ADR);
-    Wire.send(kI2C_Delete);
-    Wire.send(line);
-    Wire.send(len);
-    Wire.send(20-len);
+    Wire.write(kI2C_Delete);
+    Wire.write(line);
+    Wire.write(len);
+    Wire.write(20-len);
     Wire.endTransmission();
   }
 }
@@ -893,13 +893,13 @@ void LcdUi::writeAtLine(int line, const char* text)
 //	}
 //	
 //	Wire.beginTransmission(kI2C_LCD_SLAVE_ADR);
-//	Wire.send(kI2C_SetCursor);
-//	Wire.send(cursorAddress);
+//	Wire.write(kI2C_SetCursor);
+//	Wire.write(cursorAddress);
 //	Wire.endTransmission();
 //
 //	Wire.beginTransmission(kI2C_LCD_SLAVE_ADR);
-//  	Wire.send(kI2C_WriteString);
-//  	Wire.send((char*)text);
+//  	Wire.write(kI2C_WriteString);
+//  	Wire.write((char*)text);
 //  	Wire.endTransmission();
 //
 //	int textlen = strlen(text);
@@ -907,10 +907,10 @@ void LcdUi::writeAtLine(int line, const char* text)
 //	if(textlen<len)
 //	{
 //		Wire.beginTransmission(kI2C_LCD_SLAVE_ADR);
-//		Wire.send(kI2C_Delete);
-//		Wire.send(line);
-//		Wire.send(cursorAddress+textlen);
-//		Wire.send(cursorAddress+len);
+//		Wire.write(kI2C_Delete);
+//		Wire.write(line);
+//		Wire.write(cursorAddress+textlen);
+//		Wire.write(cursorAddress+len);
 //		Wire.endTransmission();
 //	}
 //	
