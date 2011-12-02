@@ -82,7 +82,7 @@ ISR(TIMER1_COMPA_vect)
 
 void setup()
 {
-#if 1
+#if 0
   Serial1.begin(115200);
   Serial1.println("Hello Debugger");
 #endif  
